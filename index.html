@@ -3,74 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Life OS App</title>
+    <title>Life OS</title>
     <style>
-        /* --- DISABLE PULL TO REFRESH & RESET --- */
-        html, body { 
-            overscroll-behavior-y: contain; /* Stops pull to refresh */
-            overflow: hidden; /* Stops bouncing */
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; touch-action: pan-y; }
+        /* --- DISABLE PULL TO REFRESH --- */
+        html, body { overscroll-behavior-y: contain; overflow: hidden; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; touch-action: pan-y; }
         body { background-color: #121212; color: #ffffff; height: 100vh; display: flex; flex-direction: column; }
 
         /* --- TOP APP BAR --- */
-        .app-header {
-            display: flex; align-items: center; padding: 15px 20px;
-            background-color: #1e1e1e; box-shadow: 0 2px 10px rgba(0,0,0,0.5);
-            position: fixed; width: 100%; top: 0; z-index: 100;
-        }
+        .app-header { display: flex; align-items: center; padding: 15px 20px; background-color: #1e1e1e; box-shadow: 0 2px 10px rgba(0,0,0,0.5); position: fixed; width: 100%; top: 0; z-index: 100; }
         .menu-btn { font-size: 24px; cursor: pointer; margin-right: 20px; color: #2196F3; }
         .app-title { font-size: 20px; font-weight: bold; }
 
         /* --- SIDE MENU --- */
-        .side-menu {
-            position: fixed; top: 0; left: -300px; width: 300px; height: 100vh;
-            background-color: #1e1e1e; z-index: 200; transition: 0.3s ease;
-            box-shadow: 2px 0 15px rgba(0,0,0,0.5); padding-top: 60px;
-            display: flex; flex-direction: column;
-        }
+        .side-menu { position: fixed; top: 0; left: -300px; width: 300px; height: 100vh; background-color: #1e1e1e; z-index: 200; transition: 0.3s ease; box-shadow: 2px 0 15px rgba(0,0,0,0.5); padding-top: 60px; display: flex; flex-direction: column; }
         .side-menu.open { left: 0; }
-        .menu-item {
-            padding: 18px 20px; font-size: 16px; cursor: pointer;
-            border-bottom: 1px solid #333; color: #ddd; display: flex; align-items: center; gap: 15px;
-        }
+        .menu-item { padding: 18px 20px; font-size: 16px; cursor: pointer; border-bottom: 1px solid #333; color: #ddd; display: flex; align-items: center; gap: 15px; }
         .menu-item:hover, .menu-item.active { background-color: #333; color: #2196F3; border-left: 4px solid #2196F3; }
-        .overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.6); z-index: 150; display: none;
-        }
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 150; display: none; }
 
         /* --- MAIN CONTENT --- */
-        .main-content {
-            margin-top: 60px; padding: 20px; flex: 1; overflow-y: auto;
-            padding-bottom: 100px;
-        }
+        .main-content { margin-top: 60px; padding: 20px; flex: 1; overflow-y: auto; padding-bottom: 100px; }
         .section { display: none; animation: fadeIn 0.3s; }
         .section.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* --- CARDS & UI ELEMENTS --- */
+        /* --- CARDS & UI --- */
         .card { background: #1e1e1e; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
         h3 { margin-bottom: 15px; color: #2196F3; }
-        button { background: #2196F3; color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; font-size: 16px; cursor: pointer; font-weight: bold; margin-top: 10px;}
+        button { background: #2196F3; color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; font-size: 16px; cursor: pointer; font-weight: bold; margin-top: 10px; }
         button:active { background: #1976D2; }
         input[type="text"], input[type="time"], textarea { width: 100%; padding: 12px; background: #333; border: none; color: white; border-radius: 5px; margin-bottom: 10px; font-size: 14px; }
         
-        /* --- FILE BROWSER (SIMULATED NATIVE UI) --- */
-        .file-browser { background: #000; border-radius: 10px; overflow: hidden; margin-top: 10px; }
-        .fb-header { padding: 15px; background: #1a1a1a; border-bottom: 1px solid #333; font-weight: bold; }
-        .fb-item { display: flex; align-items: center; padding: 15px; border-bottom: 1px solid #222; cursor: pointer; }
-        .fb-item:active { background: #222; }
-        .fb-icon { margin-right: 15px; font-size: 20px; color: #f0c040; }
-        .fb-icon.music { color: #4CAF50; }
+        /* --- FOLDER UI --- */
+        .folder { display: flex; align-items: center; padding: 15px; border-bottom: 1px solid #333; cursor: pointer; background: #252525; margin-bottom: 5px; border-radius: 8px; }
+        .folder-icon { font-size: 24px; margin-right: 15px; color: #f0c040; }
+        .file-list { margin-top: 15px; }
+        .file-item { padding: 12px; border-bottom: 1px solid #222; cursor: pointer; background: #1a1a1a; margin-bottom: 5px; border-radius: 5px; display: flex; justify-content: space-between; }
+        .file-item:active { background: #333; }
 
         /* --- MINI PLAYER --- */
-        .mini-player {
-            position: fixed; bottom: 0; width: 100%; background: #1e1e1e;
-            padding: 15px; display: flex; align-items: center; justify-content: space-between;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.5); z-index: 100; border-top: 1px solid #333;
-        }
-        .track-info { flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 14px; padding-right: 10px;}
+        .mini-player { position: fixed; bottom: 0; width: 100%; background: #1e1e1e; padding: 15px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 -2px 10px rgba(0,0,0,0.5); z-index: 100; border-top: 1px solid #333; }
+        .track-info { flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 14px; padding-right: 10px; }
         .controls { display: flex; gap: 15px; }
         .controls span { font-size: 24px; cursor: pointer; color: #2196F3; }
         .status { font-size: 13px; color: #4CAF50; margin-top: 8px; display: block; }
@@ -78,7 +52,6 @@
 </head>
 <body>
 
-    <!-- HEADER -->
     <div class="app-header">
         <span class="menu-btn" onclick="toggleMenu()">☰</span>
         <div class="app-title" id="headerTitle">Life OS</div>
@@ -86,7 +59,6 @@
 
     <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
 
-    <!-- SIDE MENU -->
     <div class="side-menu" id="sideMenu">
         <div class="menu-item active" onclick="switchTab('musicSection', this, 'Music Library')">🎵 Music Library</div>
         <div class="menu-item" onclick="switchTab('alarmSection', this, 'Alarms')">⏰ Alarm Settings</div>
@@ -94,30 +66,25 @@
         <div class="menu-item" onclick="switchTab('notificationSection', this, 'Message Stack')">💬 Send Notification</div>
     </div>
 
-    <!-- MAIN CONTENT -->
     <div class="main-content">
-
         <!-- MUSIC SECTION -->
         <div id="musicSection" class="section active">
             <h3>Internal Storage</h3>
-            <p style="font-size:12px; color:#aaa; margin-bottom:15px;">Select a folder to load music.</p>
+            <p style="font-size:12px; color:#aaa; margin-bottom:15px;">Tap a folder to select music. (Hold down to select multiple).</p>
             
-            <!-- SIMULATED FOLDER BROWSER UI -->
-            <div class="file-browser" id="folderBrowser">
-                <div class="fb-header">📂 Internal Storage</div>
-                <div class="fb-item" onclick="loadFolder('Music focus')">
-                    <span class="fb-icon">📁</span> Music focus
-                </div>
-                <div class="fb-item" onclick="loadFolder('Sd card')">
-                    <span class="fb-icon">📁</span> Sd card
-                </div>
-                <div class="fb-item" onclick="loadFolder('snaptube')">
-                    <span class="fb-icon">📁</span> snaptube
-                </div>
+            <div class="folder" onclick="document.getElementById('audioFileInput').click()">
+                <span class="folder-icon">📁</span> Music focus
+            </div>
+            <div class="folder" onclick="document.getElementById('audioFileInput').click()">
+                <span class="folder-icon">📁</span> Sd card
+            </div>
+            <div class="folder" onclick="document.getElementById('audioFileInput').click()">
+                <span class="folder-icon">📁</span> snaptube
             </div>
 
-            <!-- HIDDEN INPUT FOR ACTUAL FILE PICKER -->
             <input type="file" id="audioFileInput" accept="audio/*" multiple style="display:none;">
+            
+            <div id="fileList" class="file-list"></div>
         </div>
 
         <!-- ALARM SECTION -->
@@ -127,6 +94,11 @@
                 <input type="time" id="alarmTime">
                 <button onclick="testNativeAlarm()">Set Native Alarm</button>
                 <span id="alarmStatus" class="status"></span>
+            </div>
+            <div class="card">
+                <h3>App Timer (Test)</h3>
+                <p style="font-size:12px; color:#aaa; margin-bottom:10px;">Only rings while app is open.</p>
+                <button onclick="startAppAlarm()">Test App Alarm (5s)</button>
             </div>
         </div>
 
@@ -139,33 +111,31 @@
             </div>
         </div>
 
-        <!-- NOTIFICATION SECTION (NEW) -->
+        <!-- NOTIFICATION SECTION -->
         <div id="notificationSection" class="section">
             <div class="card">
                 <h3>Push a Message</h3>
-                <p style="font-size:12px; color:#aaa; margin-bottom:10px;">Send a local notification to your device.</p>
-                <input type="text" id="notifHeader" placeholder="Notification Header (e.g., System Alert)">
+                <input type="text" id="notifHeader" placeholder="Notification Header">
                 <textarea id="notifMessage" rows="3" placeholder="Message body..."></textarea>
                 <input type="time" id="notifTime">
                 <button onclick="sendLocalNotification()">Trigger Notification</button>
                 <span id="notifStatus" class="status"></span>
             </div>
         </div>
-
     </div>
 
-    <!-- MINI PLAYER -->
     <div class="mini-player">
-        <div class="track-info" id="miniTrackName">Music Player</div>
+        <div class="track-info" id="miniTrackName">No track loaded</div>
         <div class="controls">
             <span onclick="togglePlay()" id="playPauseBtn">▶️</span>
         </div>
     </div>
 
-    <audio id="bgAudio"></audio>
+    <audio id="bgAudio" loop></audio>
+    <audio id="testAlarmAudio" src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"></audio>
 
     <script>
-        // --- NAVIGATION & UI LOGIC ---
+        // --- NAVIGATION ---
         function toggleMenu() {
             document.getElementById('sideMenu').classList.toggle('open');
             const overlay = document.getElementById('overlay');
@@ -175,37 +145,43 @@
         function switchTab(sectionId, element, title) {
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
-            
             document.getElementById(sectionId).classList.add('active');
             element.classList.add('active');
             document.getElementById('headerTitle').innerText = title;
-            
             toggleMenu(); 
         }
 
-        // --- MUSIC PLAYER & FOLDER SIMULATION ---
+        // --- MUSIC PLAYER ---
         const audio = document.getElementById('bgAudio');
         let isPlaying = false;
         let playlist = [];
         let currentTrackIndex = 0;
 
-        // When user clicks a folder in our fake UI, open the native file picker
-        function loadFolder(folderName) {
-            document.getElementById('audioFileInput').click();
-        }
-
-        // Handle files selected from the native picker
         document.getElementById('audioFileInput').addEventListener('change', function(e) {
             const files = e.target.files;
+            const listDiv = document.getElementById('fileList');
+            listDiv.innerHTML = ''; 
+            playlist = [];
+
             if(files.length > 0) {
-                playlist = Array.from(files).map(file => ({
-                    url: URL.createObjectURL(file),
-                    name: file.name
-                }));
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    const url = URL.createObjectURL(file);
+                    playlist.push({ url: url, name: file.name });
+
+                    const item = document.createElement('div');
+                    item.className = 'file-item';
+                    item.innerHTML = `<span>🎵 ${file.name}</span>`;
+                    item.onclick = () => {
+                        currentTrackIndex = i;
+                        loadTrack(currentTrackIndex);
+                        playAudio();
+                    };
+                    listDiv.appendChild(item);
+                }
                 currentTrackIndex = 0;
                 loadTrack(currentTrackIndex);
                 playAudio();
-                showMediaNotification(); // Call native notification
             }
         });
 
@@ -213,14 +189,15 @@
             if(playlist.length === 0) return;
             audio.src = playlist[index].url;
             document.getElementById('miniTrackName').innerText = playlist[index].name;
-            updateMediaNotification(); // Update native notification
+            
+            // Try to show notification
+            if(window.AndroidAPI && window.AndroidAPI.showMediaNotification) {
+                window.AndroidAPI.showMediaNotification(playlist[index].name, "Life OS Player");
+            }
         }
 
         function togglePlay() {
-            if(playlist.length === 0) {
-                alert("Click a folder first to load music.");
-                return;
-            }
+            if(playlist.length === 0) { alert("Select a folder first."); return; }
             if(isPlaying) {
                 audio.pause();
                 document.getElementById('playPauseBtn').innerText = "▶️";
@@ -229,7 +206,6 @@
                 document.getElementById('playPauseBtn').innerText = "⏸️";
             }
             isPlaying = !isPlaying;
-            updateMediaNotification();
         }
 
         function playAudio() {
@@ -250,54 +226,43 @@
             }
         });
 
-        // --- NATIVE MEDIA NOTIFICATION ---
-        function showMediaNotification() {
-            // This attempts to call the app builder's native media notification API
-            if(window.AndroidAPI && window.AndroidAPI.showMediaNotification) {
-                window.AndroidAPI.showMediaNotification(playlist[currentTrackIndex].name, "Life OS Player");
-            } else {
-                console.log("Native Media Notification API not found. Music will play silently in background.");
-            }
-        }
-
-        function updateMediaNotification() {
-            if(window.AndroidAPI && window.AndroidAPI.updateMediaNotification) {
-                 window.AndroidAPI.updateMediaNotification(playlist[currentTrackIndex].name, isPlaying);
-            }
-        }
-
-        // --- ALARM LOGIC ---
+        // --- ALARMS ---
         function testNativeAlarm() {
             const time = document.getElementById('alarmTime').value;
             if(!time) { alert("Select a time."); return; }
-            
             const [hours, minutes] = time.split(':');
-            document.getElementById('alarmStatus').innerText = `Attempting to set alarm for ${hours}:${minutes}...`;
+            document.getElementById('alarmStatus').innerText = `Attempting native alarm for ${hours}:${minutes}...`;
 
-            // Try different common native bridge methods for alarms
+            // IMPORTANT: Replace this with the exact command from your app's guide
             if(window.AndroidAPI) {
                 if(window.AndroidAPI.setAlarm) {
                     window.AndroidAPI.setAlarm(parseInt(hours), parseInt(minutes));
-                    document.getElementById('alarmStatus').innerText += " (Called setAlarm)";
+                    document.getElementById('alarmStatus').innerText += " (Sent)";
                 } else if (window.AndroidAPI.scheduleAlarm) {
                     window.AndroidAPI.scheduleAlarm(parseInt(hours), parseInt(minutes));
-                    document.getElementById('alarmStatus').innerText += " (Called scheduleAlarm)";
+                    document.getElementById('alarmStatus').innerText += " (Sent)";
                 } else {
-                    document.getElementById('alarmStatus').innerText += " (Error: No Alarm API found in bridge)";
+                    document.getElementById('alarmStatus').innerText += " (Error: API Not Found)";
                 }
             } else {
-                document.getElementById('alarmStatus').innerText += " (Error: AndroidAPI bridge missing)";
+                document.getElementById('alarmStatus').innerText += " (Error: Bridge Missing)";
             }
         }
 
-        // --- LOCATION TRACKING LOGIC ---
+        function startAppAlarm() {
+            setTimeout(() => {
+                document.getElementById('testAlarmAudio').play();
+                alert("App Alarm!");
+            }, 5000);
+        }
+
+        // --- LOCATION ---
         function startLocationTracking() {
             const statusText = document.getElementById('locStatus');
             if(!navigator.geolocation) {
                 statusText.innerText = "Geolocation not supported.";
                 return;
             }
-
             statusText.innerText = "Status: Requesting GPS...";
             navigator.geolocation.watchPosition(
                 (position) => {
@@ -308,7 +273,7 @@
             );
         }
 
-        // --- NOTIFICATION LOGIC (NEW) ---
+        // --- NOTIFICATIONS ---
         function sendLocalNotification() {
             const title = document.getElementById('notifHeader').value || "New Message";
             const body = document.getElementById('notifMessage').value || "You have a new message.";
@@ -316,20 +281,17 @@
 
             document.getElementById('notifStatus').innerText = "Sending notification...";
 
-            // Use Native Bridge to trigger system notification
+            // IMPORTANT: Replace with exact command from app guide
             if(window.AndroidAPI && window.AndroidAPI.showNotification) {
-                // If a time is set, we might need a different API (scheduleNotification), 
-                // but for now, let's just fire it immediately.
                 window.AndroidAPI.showNotification(title, body);
                 document.getElementById('notifStatus').innerText = "Notification sent!";
             } else {
-                // Fallback to standard Web Notification API (works if user grants browser permission)
                 if (!("Notification" in window)) {
                     document.getElementById('notifStatus').innerText = "Error: API not found.";
                 } else if (Notification.permission === "granted") {
                     new Notification(title, { body: body });
                     document.getElementById('notifStatus').innerText = "Sent via Web API.";
-                } else if (Notification.permission !== "denied") {
+                } else {
                     Notification.requestPermission().then(permission => {
                         if (permission === "granted") {
                             new Notification(title, { body: body });
@@ -340,25 +302,17 @@
             }
         }
 
-        // Prevent accidental refresh via touch gestures
+        // Prevent Pull-to-Refresh
         document.addEventListener('touchmove', function(e) {
             if (e.touches.length > 1) e.preventDefault();
         }, { passive: false });
         
         let lastTouchY = 0;
-        document.addEventListener('touchstart', function(e) {
-            lastTouchY = e.touches[0].clientY;
-        }, { passive: true });
-
+        document.addEventListener('touchstart', function(e) { lastTouchY = e.touches[0].clientY; }, { passive: true });
         document.addEventListener('touchmove', function(e) {
             let touchY = e.touches[0].clientY;
-            let touchYDiff = touchY - lastTouchY;
-            // If pulling down at the very top of the page
-            if (window.scrollY === 0 && touchYDiff > 0) {
-                e.preventDefault(); // Block it
-            }
+            if (window.scrollY === 0 && (touchY - lastTouchY) > 0) e.preventDefault();
         }, { passive: false });
-
     </script>
 </body>
 </html>
