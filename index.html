@@ -2,151 +2,270 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Life OS Routine Pipeline</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Life OS App</title>
     <style>
-        body { font-family: sans-serif; background: #121212; color: white; padding: 20px; }
-        .card { background: #1e1e1e; padding: 15px; border-radius: 10px; margin-bottom: 15px; }
-        button { background: #2196F3; color: white; border: none; padding: 10px; border-radius: 5px; width: 100%; margin-top: 10px; }
-        .status { color: #4CAF50; font-weight: bold; }
+        /* --- APP STYLING & RESET --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #121212; color: #ffffff; overflow-x: hidden; height: 100vh; display: flex; flex-direction: column; }
+
+        /* --- TOP APP BAR --- */
+        .app-header {
+            display: flex; align-items: center; padding: 15px 20px;
+            background-color: #1e1e1e; box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+            position: fixed; width: 100%; top: 0; z-index: 100;
+        }
+        .menu-btn { font-size: 24px; cursor: pointer; margin-right: 20px; color: #2196F3; }
+        .app-title { font-size: 20px; font-weight: bold; }
+
+        /* --- SIDE MENU (DRAWER) --- */
+        .side-menu {
+            position: fixed; top: 0; left: -280px; width: 280px; height: 100vh;
+            background-color: #1e1e1e; z-index: 200; transition: 0.3s ease;
+            box-shadow: 2px 0 15px rgba(0,0,0,0.5); padding-top: 60px;
+            display: flex; flex-direction: column;
+        }
+        .side-menu.open { left: 0; }
+        .menu-item {
+            padding: 20px; font-size: 18px; cursor: pointer;
+            border-bottom: 1px solid #333; color: #ddd;
+        }
+        .menu-item:hover, .menu-item.active { background-color: #333; color: #2196F3; border-left: 4px solid #2196F3; }
+        .overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); z-index: 150; display: none;
+        }
+
+        /* --- MAIN CONTENT AREA --- */
+        .main-content {
+            margin-top: 60px; padding: 20px; flex: 1; overflow-y: auto;
+            padding-bottom: 100px; /* Space for bottom player */
+        }
+        .section { display: none; animation: fadeIn 0.3s; }
+        .section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* --- CARDS --- */
+        .card { background: #1e1e1e; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        h3 { margin-bottom: 15px; color: #2196F3; }
+
+        /* --- BUTTONS & INPUTS --- */
+        button { background: #2196F3; color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; font-size: 16px; cursor: pointer; font-weight: bold; margin-top: 10px;}
+        button:active { background: #1976D2; }
+        input[type="file"], input[type="time"] { width: 100%; padding: 10px; background: #333; border: none; color: white; border-radius: 5px; margin-bottom: 10px; }
+
+        /* --- MINI MUSIC PLAYER (BOTTOM) --- */
+        .mini-player {
+            position: fixed; bottom: 0; width: 100%; background: #1e1e1e;
+            padding: 15px; display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.5); z-index: 100;
+        }
+        .track-info { flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 14px; padding-right: 10px;}
+        .controls { display: flex; gap: 15px; }
+        .controls span { font-size: 20px; cursor: pointer; color: #2196F3; }
+        .controls span:active { color: #fff; }
+
+        /* --- UTILS --- */
+        .status { font-size: 14px; color: #4CAF50; margin-top: 5px; display: block; }
     </style>
 </head>
 <body>
 
-    <h2>Life OS Pipeline</h2>
-
-    <!-- 1. Music File Reader -->
-    <div class="card">
-        <h3>1. Background Music</h3>
-        <input type="file" id="musicFile" accept="audio/*">
-        <p>Status: <span id="musicStatus" class="status">Waiting for file...</span></p>
+    <!-- HEADER -->
+    <div class="app-header">
+        <span class="menu-btn" onclick="toggleMenu()">☰</span>
+        <div class="app-title" id="headerTitle">Life OS</div>
     </div>
 
-    <!-- 2. Bluetooth Check -->
-    <div class="card">
-        <h3>2. Bluetooth Status</h3>
-        <p id="btStatus">Checking connection...</p>
+    <!-- OVERLAY FOR MENU -->
+    <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
+
+    <!-- SIDE MENU -->
+    <div class="side-menu" id="sideMenu">
+        <div class="menu-item active" onclick="switchTab('musicSection', this, 'Music Player')">🎵 Music Player</div>
+        <div class="menu-item" onclick="switchTab('alarmSection', this, 'Alarms')">⏰ Alarm Settings</div>
+        <div class="menu-item" onclick="switchTab('locationSection', this, 'Location Tracking')">📍 Location Track</div>
     </div>
 
-    <!-- 3. Location & Alarm Pipeline -->
-    <div class="card">
-        <h3>3. Location Routine</h3>
-        <p>Target Location: <input type="text" id="targetLoc" placeholder="e.g., Office, Gym"></p>
-        <p>Status: <span id="locStatus" class="status">Waiting for GPS...</span></p>
-        <button onclick="startPipeline()">Start Routine Pipeline</button>
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+
+        <!-- MUSIC SECTION -->
+        <div id="musicSection" class="section active">
+            <div class="card">
+                <h3>Local Music Library</h3>
+                <p style="font-size:12px; color:#aaa; margin-bottom:10px;">Select songs from your device storage.</p>
+                <input type="file" id="audioFileInput" accept="audio/*" multiple>
+                <div style="margin-top:15px;">
+                    <p><strong>Loaded Track:</strong></p>
+                    <p id="currentTrackName" style="color:#2196F3; font-size: 16px;">No track loaded</p>
+                </div>
+            </div>
+            <div class="card">
+                <h3>Background Playback</h3>
+                <p style="font-size:14px; color:#aaa;">Music continues playing when you close this app or lock your screen.</p>
+            </div>
+        </div>
+
+        <!-- ALARM SECTION -->
+        <div id="alarmSection" class="section">
+            <div class="card">
+                <h3>Set Native Alarm</h3>
+                <p style="font-size:12px; color:#aaa; margin-bottom:10px;">This uses Android's native alarm system to wake you up.</p>
+                <input type="time" id="alarmTime">
+                <button onclick="setNativeAlarm()">Set Alarm</button>
+                <span id="alarmStatus" class="status"></span>
+            </div>
+        </div>
+
+        <!-- LOCATION SECTION -->
+        <div id="locationSection" class="section">
+            <div class="card">
+                <h3>GPS Tracking</h3>
+                <p style="font-size:12px; color:#aaa; margin-bottom:10px;">Allows the app to read your location for automated routines.</p>
+                <button onclick="startLocationTracking()">Start Location Service</button>
+                <span id="locStatus" class="status">Status: Not tracking</span>
+            </div>
+        </div>
+
     </div>
 
-    <audio id="bgMusic" loop></audio>
+    <!-- MINI PLAYER (ALWAYS VISIBLE) -->
+    <div class="mini-player">
+        <div class="track-info" id="miniTrackName">Music Player</div>
+        <div class="controls">
+            <span onclick="togglePlay()" id="playPauseBtn">▶️</span>
+        </div>
+    </div>
+
+    <!-- AUDIO ELEMENT (HIDDEN) -->
+    <audio id="bgAudio"></audio>
 
     <script>
-        // --- GLOBAL VARIABLES ---
-        let isBluetoothConnected = false;
-        let currentLat = 0;
-        let currentLon = 0;
-        let musicPlaying = false;
-        const audioPlayer = document.getElementById('bgMusic');
+        // --- APP NAVIGATION LOGIC ---
+        function toggleMenu() {
+            document.getElementById('sideMenu').classList.toggle('open');
+            const overlay = document.getElementById('overlay');
+            overlay.style.display = overlay.style.display === 'block' ? 'none' : 'block';
+        }
 
-        // --- 1. READ INTERNAL MUSIC FILE ---
-        document.getElementById('musicFile').addEventListener('change', function(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const fileURL = URL.createObjectURL(file);
-                audioPlayer.src = fileURL;
-                document.getElementById('musicStatus').innerText = "Loaded: " + file.name;
+        function switchTab(sectionId, element, title) {
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            // Remove active class from menu items
+            document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+            
+            // Show selected
+            document.getElementById(sectionId).classList.add('active');
+            element.classList.add('active');
+            document.getElementById('headerTitle').innerText = title;
+            
+            toggleMenu(); // Close menu
+        }
+
+        // --- MUSIC PLAYER LOGIC ---
+        const audio = document.getElementById('bgAudio');
+        let isPlaying = false;
+        let playlist = [];
+        let currentTrackIndex = 0;
+
+        // Read Local Files
+        document.getElementById('audioFileInput').addEventListener('change', function(e) {
+            const files = e.target.files;
+            if(files.length > 0) {
+                playlist = Array.from(files).map(file => URL.createObjectURL(file));
+                currentTrackIndex = 0;
+                loadTrack(currentTrackIndex);
+                playAudio();
             }
         });
 
-        // --- 2. CHECK BLUETOOTH (Uses Native Bridge) ---
-        function checkBluetooth() {
-            // Note: The exact bridge command depends on the app's documentation. 
-            // Usually, it looks something like this:
-            if (window.AndroidAPI && window.AndroidAPI.getBluetoothStatus) {
-                window.AndroidAPI.getBluetoothStatus((isConnected) => {
-                    isBluetoothConnected = isConnected;
-                    document.getElementById('btStatus').innerText = isConnected ? "Connected" : "Not Connected";
-                    evaluatePipeline();
-                });
+        function loadTrack(index) {
+            if(playlist.length === 0) return;
+            audio.src = playlist[index];
+            const fileName = document.getElementById('audioFileInput').files[index].name;
+            document.getElementById('currentTrackName').innerText = fileName;
+            document.getElementById('miniTrackName').innerText = fileName;
+        }
+
+        function togglePlay() {
+            if(playlist.length === 0) {
+                alert("Please select music files first.");
+                return;
+            }
+            if(isPlaying) {
+                audio.pause();
+                document.getElementById('playPauseBtn').innerText = "▶️";
             } else {
-                // Fallback for testing in browser
-                document.getElementById('btStatus').innerText = "Bridge not found (Testing Mode)";
-                isBluetoothConnected = true; // Fake it for testing
+                audio.play();
+                document.getElementById('playPauseBtn').innerText = "⏸️";
+            }
+            isPlaying = !isPlaying;
+        }
+
+        function playAudio() {
+            audio.play();
+            isPlaying = true;
+            document.getElementById('playPauseBtn').innerText = "⏸️";
+        }
+
+        // Auto play next track
+        audio.addEventListener('ended', () => {
+            currentTrackIndex++;
+            if(currentTrackIndex < playlist.length) {
+                loadTrack(currentTrackIndex);
+                playAudio();
+            } else {
+                currentTrackIndex = 0;
+                loadTrack(0);
+                playAudio();
+            }
+        });
+
+        // --- ALARM LOGIC (Native Bridge) ---
+        function setNativeAlarm() {
+            const time = document.getElementById('alarmTime').value;
+            if(!time) {
+                alert("Please select a time.");
+                return;
+            }
+            const [hours, minutes] = time.split(':');
+            document.getElementById('alarmStatus').innerText = `Alarm set for ${hours}:${minutes}`;
+
+            // NATIVE BRIDGE CALL FOR ALARM
+            // Check if the app's native bridge exists
+            if(window.AndroidAPI && window.AndroidAPI.setAlarm) {
+                // Note: The parameters might differ based on your specific app builder. 
+                window.AndroidAPI.setAlarm(parseInt(hours), parseInt(minutes));
+            } else {
+                console.log("Native Alarm API not found. (This is normal in a web browser, but should work in the APK).");
             }
         }
 
-        // --- 3. GET LOCATION (Uses Standard Web Geolocation) ---
-        function getLocation() {
-            if (navigator.geolocation) {
-                navigator.geolocation.watchPosition((position) => {
-                    currentLat = position.coords.latitude;
-                    currentLon = position.coords.longitude;
-                    document.getElementById('locStatus').innerText = `Lat: ${currentLat.toFixed(4)}, Lon: ${currentLon.toFixed(4)}`;
-                    evaluatePipeline(); // Re-check conditions every time location updates
-                }, (error) => {
-                    document.getElementById('locStatus').innerText = "GPS Error: " + error.message;
-                }, { enableHighAccuracy: true });
-            } else {
-                document.getElementById('locStatus').innerText = "Geolocation not supported.";
+        // --- LOCATION TRACKING LOGIC ---
+        let watchId = null;
+        function startLocationTracking() {
+            const statusText = document.getElementById('locStatus');
+            if(!navigator.geolocation) {
+                statusText.innerText = "Geolocation is not supported by this device.";
+                return;
             }
-        }
 
-        // --- THE PIPELINE LOGIC (If Conditions) ---
-        function evaluatePipeline() {
-            // Example Condition: If Bluetooth is connected AND we are at the "Target Location" (You need to define the coords)
-            // For this example, we will just use a dummy coordinate (e.g., 12.9716, 77.5946 for Bangalore)
+            statusText.innerText = "Status: Requesting GPS...";
             
-            const targetLat = 12.9716; 
-            const targetLon = 77.5946;
-            const threshold = 0.001; // Roughly 100 meters radius
-
-            // Check if we are near the target location
-            const isNearLocation = (Math.abs(currentLat - targetLat) < threshold) && (Math.abs(currentLon - targetLon) < threshold);
-
-            // CONDITION 1: Start Music
-            // If Bluetooth is connected AND we are near the location AND music isn't playing
-            if (isBluetoothConnected && isNearLocation && !musicPlaying) {
-                audioPlayer.play();
-                musicPlaying = true;
-                console.log("Pipeline: Music Started.");
-                
-                // Optional: Trigger a native vibration
-                if(window.AndroidAPI && window.AndroidAPI.vibrate) {
-                    window.AndroidAPI.vibrate(500); // Vibrate for 500ms
-                }
-            }
-
-            // CONDITION 2: Stop Music (End of location)
-            // If we leave the location AND music is playing
-            if (!isNearLocation && musicPlaying) {
-                audioPlayer.pause();
-                musicPlaying = false;
-                console.log("Pipeline: Music Stopped (Left location).");
-            }
+            watchId = navigator.geolocation.watchPosition(
+                (position) => {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    statusText.innerText = `Tracking Active\nLat: ${lat.toFixed(5)}\nLon: ${lon.toFixed(5)}`;
+                    // Here is where you will eventually put your "If near location" logic
+                },
+                (error) => {
+                    statusText.innerText = "Error: " + error.message;
+                },
+                { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
+            );
         }
-
-        // --- SET ALARM (Native Bridge) ---
-        function setNativeAlarm(hour, minute) {
-            // The HTML to APK app provides an API for alarms. 
-            // You would pass the time to the native bridge here.
-            if (window.AndroidAPI && window.AndroidAPI.setAlarm) {
-                window.AndroidAPI.setAlarm(hour, minute);
-                alert(`Alarm set for ${hour}:${minute}`);
-            } else {
-                alert("Native Alarm API not available in testing mode.");
-            }
-        }
-
-        // --- INITIALIZE ---
-        function startPipeline() {
-            checkBluetooth();
-            getLocation();
-            
-            // Example: Set a native alarm for 7:00 AM when routine starts
-            // setNativeAlarm(7, 0); 
-        }
-
-        // Check bluetooth every 30 seconds
-        setInterval(checkBluetooth, 30000);
-
     </script>
 </body>
 </html>
