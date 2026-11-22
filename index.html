@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Life OS Routine Pipeline</title>
+    <style>
+        body { font-family: sans-serif; background: #121212; color: white; padding: 20px; }
+        .card { background: #1e1e1e; padding: 15px; border-radius: 10px; margin-bottom: 15px; }
+        button { background: #2196F3; color: white; border: none; padding: 10px; border-radius: 5px; width: 100%; margin-top: 10px; }
+        .status { color: #4CAF50; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <h2>Life OS Pipeline</h2>
+
+    <!-- 1. Music File Reader -->
+    <div class="card">
+        <h3>1. Background Music</h3>
+        <input type="file" id="musicFile" accept="audio/*">
+        <p>Status: <span id="musicStatus" class="status">Waiting for file...</span></p>
+    </div>
+
+    <!-- 2. Bluetooth Check -->
+    <div class="card">
+        <h3>2. Bluetooth Status</h3>
+        <p id="btStatus">Checking connection...</p>
+    </div>
+
+    <!-- 3. Location & Alarm Pipeline -->
+    <div class="card">
+        <h3>3. Location Routine</h3>
+        <p>Target Location: <input type="text" id="targetLoc" placeholder="e.g., Office, Gym"></p>
+        <p>Status: <span id="locStatus" class="status">Waiting for GPS...</span></p>
+        <button onclick="startPipeline()">Start Routine Pipeline</button>
+    </div>
+
+    <audio id="bgMusic" loop></audio>
+
+    <script>
+        // --- GLOBAL VARIABLES ---
+        let isBluetoothConnected = false;
+        let currentLat = 0;
+        let currentLon = 0;
+        let musicPlaying = false;
+        const audioPlayer = document.getElementById('bgMusic');
+
+        // --- 1. READ INTERNAL MUSIC FILE ---
+        document.getElementById('musicFile').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const fileURL = URL.createObjectURL(file);
+                audioPlayer.src = fileURL;
+                document.getElementById('musicStatus').innerText = "Loaded: " + file.name;
+            }
+        });
+
+        // --- 2. CHECK BLUETOOTH (Uses Native Bridge) ---
+        function checkBluetooth() {
+            // Note: The exact bridge command depends on the app's documentation. 
+            // Usually, it looks something like this:
+            if (window.AndroidAPI && window.AndroidAPI.getBluetoothStatus) {
+                window.AndroidAPI.getBluetoothStatus((isConnected) => {
+                    isBluetoothConnected = isConnected;
+                    document.getElementById('btStatus').innerText = isConnected ? "Connected" : "Not Connected";
+                    evaluatePipeline();
+                });
+            } else {
+                // Fallback for testing in browser
+                document.getElementById('btStatus').innerText = "Bridge not found (Testing Mode)";
+                isBluetoothConnected = true; // Fake it for testing
+            }
+        }
+
+        // --- 3. GET LOCATION (Uses Standard Web Geolocation) ---
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.watchPosition((position) => {
+                    currentLat = position.coords.latitude;
+                    currentLon = position.coords.longitude;
+                    document.getElementById('locStatus').innerText = `Lat: ${currentLat.toFixed(4)}, Lon: ${currentLon.toFixed(4)}`;
+                    evaluatePipeline(); // Re-check conditions every time location updates
+                }, (error) => {
+                    document.getElementById('locStatus').innerText = "GPS Error: " + error.message;
+                }, { enableHighAccuracy: true });
+            } else {
+                document.getElementById('locStatus').innerText = "Geolocation not supported.";
+            }
+        }
+
+        // --- THE PIPELINE LOGIC (If Conditions) ---
+        function evaluatePipeline() {
+            // Example Condition: If Bluetooth is connected AND we are at the "Target Location" (You need to define the coords)
+            // For this example, we will just use a dummy coordinate (e.g., 12.9716, 77.5946 for Bangalore)
+            
+            const targetLat = 12.9716; 
+            const targetLon = 77.5946;
+            const threshold = 0.001; // Roughly 100 meters radius
+
+            // Check if we are near the target location
+            const isNearLocation = (Math.abs(currentLat - targetLat) < threshold) && (Math.abs(currentLon - targetLon) < threshold);
+
+            // CONDITION 1: Start Music
+            // If Bluetooth is connected AND we are near the location AND music isn't playing
+            if (isBluetoothConnected && isNearLocation && !musicPlaying) {
+                audioPlayer.play();
+                musicPlaying = true;
+                console.log("Pipeline: Music Started.");
+                
+                // Optional: Trigger a native vibration
+                if(window.AndroidAPI && window.AndroidAPI.vibrate) {
+                    window.AndroidAPI.vibrate(500); // Vibrate for 500ms
+                }
+            }
+
+            // CONDITION 2: Stop Music (End of location)
+            // If we leave the location AND music is playing
+            if (!isNearLocation && musicPlaying) {
+                audioPlayer.pause();
+                musicPlaying = false;
+                console.log("Pipeline: Music Stopped (Left location).");
+            }
+        }
+
+        // --- SET ALARM (Native Bridge) ---
+        function setNativeAlarm(hour, minute) {
+            // The HTML to APK app provides an API for alarms. 
+            // You would pass the time to the native bridge here.
+            if (window.AndroidAPI && window.AndroidAPI.setAlarm) {
+                window.AndroidAPI.setAlarm(hour, minute);
+                alert(`Alarm set for ${hour}:${minute}`);
+            } else {
+                alert("Native Alarm API not available in testing mode.");
+            }
+        }
+
+        // --- INITIALIZE ---
+        function startPipeline() {
+            checkBluetooth();
+            getLocation();
+            
+            // Example: Set a native alarm for 7:00 AM when routine starts
+            // setNativeAlarm(7, 0); 
+        }
+
+        // Check bluetooth every 30 seconds
+        setInterval(checkBluetooth, 30000);
+
+    </script>
+</body>
+</html>
